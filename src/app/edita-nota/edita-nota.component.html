@@ -1,0 +1,7 @@
+<td *ngIf="!editable">{{nota.titulo}}</td>
+<td *ngIf="!editable">{{nota.contenido}}</td>
+<td *ngIf="!editable">{{nota.fecha}}</td>
+<td *ngIf="editable"><input class="form-control" [(ngModel)]="nota.titulo"/></td>
+<td *ngIf="editable"><input class="form-control" [(ngModel)]="nota.contenido"/></td>
+<td *ngIf="editable"><input class="form-control" [(ngModel)]="nota.fecha"/></td>
+<td><button class="btn btn-primary" (click)="onEdit()">{{editable ? 'Guardar': 'Editar'}}</button></td>
