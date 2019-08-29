@@ -5,7 +5,7 @@ var cors = require('cors');
 var path = require('path');
 const NOTAS_APP_DIR = "/dist/notas-gui";
 
-var port = 3000;
+var port = (process.env.PORT || 3000);
 var urlBase = "/api/v1";
 var filename = __dirname + "/notas.json";
 var notas = [{"titulo":"Nota de prueba","contenido": "recordar completar la colección de todos los metodos de la api en postman"}];
