@@ -3,6 +3,8 @@ var bodyParser = require("body-parser");
 var datastore = require("nedb");
 var cors = require('cors');
 var path = require('path');
+var Nota = require('./notas');
+
 const NOTAS_APP_DIR = "/dist/notas-gui";
 
 
@@ -28,14 +30,13 @@ app.get('/', function (req, res) {
 
 
 app.get(urlBase + "/notas", (req, res) => {
-    db.find({}, (err, notas) => {
+    Nota.find((err, notas) => {
         if (err) {
             console.error("Error accediendo a la base de datos");
             res.sendStatus(500);
         } else {
             res.send(notas.map((nota) => {
-                delete nota._id;
-                return nota;
+                return nota.cleanup();
             }));
         }
     })
@@ -43,10 +44,15 @@ app.get(urlBase + "/notas", (req, res) => {
 
 
 app.post(urlBase + "/notas", (req, res) => {
-    db.insert(req.body)
-    //notas.push(req.body);
-    // res.sendStatus(201);
-    res.status(200).send('Nota guardada')
+    var nota = req.body;
+    Nota.create(nota, (err) => {
+        if (err) {
+            console.error(err);
+            res.sendStatus(500);
+        } else {
+            res.status(200).send('Nota guardada');
+        }
+    });
 });
 
 app.put(urlBase + "/notas", (req, res) => {
@@ -54,14 +60,19 @@ app.put(urlBase + "/notas", (req, res) => {
 });
 
 app.delete(urlBase + "/notas", (req, res) => {
-    db.remove({});
+    Nota.deleteMany({}, (err) => {
+        if (err) {
+            console.error("Error accesing DB");
+            res.sendStatus(500);
+        }
+    });
     res.sendStatus(200);
 });
 
 
 app.get(urlBase + "/notas/:titulo", (req, res) => {
     var titulo = req.params.titulo;
-    db.find({ "titulo": titulo }, (err, notas) => {
+    Nota.find({ "titulo": titulo }, (err, notas) => {
         if (err) {
             res.sendStatus(500);
         } else {
@@ -70,15 +81,11 @@ app.get(urlBase + "/notas/:titulo", (req, res) => {
             } else if (notas.length > 1) {
                 console.warn("Entrada duplicada...");
                 res.send(notas.map((nota) => {
-                    delete nota._id;
-                    return nota;
+                    return nota.cleanup();
                 })[0]);
             } else {
                 res.send(notas.map((nota) => {
-                    delete nota._id;
-                    return nota;
-
-
+                    return nota.cleanup();
                 })[0]);
             }
         }
@@ -88,14 +95,14 @@ app.get(urlBase + "/notas/:titulo", (req, res) => {
 
 app.delete(urlBase + "/notas/:titulo", (req, res) => {
     var titulo = req.params.titulo;
-    db.remove({ "titulo": titulo }, (err, eliminada) => {
+    Nota.deleteMany({ "titulo": titulo }, (err, eliminada) => {
         if (err) {
             console.error("Error accediendo a la base datos");
             res.sendStatus(500);
         } else {
-            if (eliminada > 1) {
+            if (eliminada.n > 1) {
                 console.warn("Entradas duplicada...");
-            } else if (eliminada == 0) {
+            } else if (eliminada.n == 0) {
                 res.status(404).send("No se ha encontrado la nota");
             } else {
                 res.status(201).send("Nota eliminada correctamente");
@@ -112,14 +119,14 @@ app.put(urlBase + "/notas/:titulo", (req, res) => {
         res.sendStatus(409);
         return;
     }
-    db.update({ "titulo": titulo }, cambioNota, (err, actulizado) => {
+    Nota.replaceOne({ "titulo": titulo }, cambioNota, (err, actulizado) => {
         if (err) {
             console.error("Error accediendo a la base datos");
             res.sendStatus(500);
         } else {
-            if (actulizado > 1) {
+            if (actulizado.n > 1) {
                 console.warn("Entradas duplicada...");
-            } else if (actulizado == 0) {
+            } else if (actulizado.n == 0) {
                 res.status(404).send("No se ha encontrado la nota");
             } else {
                 res.status(201).send("Nota actualizada correctamente");

@@ -2,6 +2,7 @@ var server = require('../server');
 var chai = require('chai');
 var chaiHttp = require('chai-http');
 var sinon = require('sinon');
+var Nota = require('../notas');
 var expect = chai.expect;
 
 chai.use(chaiHttp);
@@ -16,20 +17,7 @@ describe("Notas API", () => {
         done();
     });
 
-    before((done) => {
-        var notas = [{ "titulo": "prueba 2", "contenido": "contenido de la tercera nota", "fecha": "22/08/2019" },
-        { "titulo": "prueba 3", "contenido": "contenido de la tercera nota", "fecha": "22/08/2019" }];
-        
-        var dbFindStub = sinon.stub(server.db, 'find');
-        dbFindStub.yields(null, notas);
 
-        done();
-        // server.db.remove({}, { multi: true }, () => {
-        //     server.db.insert(notas, () => {
-        //         done();
-        //     });
-        // });
-    });
     describe("Get raiz /", () => {
         it("should return HTML", done => {
             chai
@@ -44,6 +32,11 @@ describe("Notas API", () => {
     });
 
     describe('Get /notas', () => {
+        var nota = new Nota({"titulo": "prueba 2", "contenido": "contenido de la tercera nota", "fecha": "09/02/2019"})
+        var notatMock = sinon.mock(nota);
+        notatMock.expects('cleanup').returns({ "titulo": "prueba 2", "contenido": "contenido de la tercera nota", "fecha": "09/02/2019" });
+        var notaStub = sinon.stub(Nota, 'find');
+        notaStub.yields(null, [nota]);
         it("should return all notas", done => {
             chai
                 .request(server.app)
@@ -52,8 +45,8 @@ describe("Notas API", () => {
                 .end((err, res) => {
                     expect(res).to.have.status(200);
                     expect(res.body).to.be.an("array");
-                    expect(res.body).to.have.lengthOf(2);
-                    // proyectMock.verify();
+                    expect(res.body).to.have.lengthOf(1);
+                    notatMock.verify();
                     done();
                 });
 
@@ -64,9 +57,9 @@ describe("Notas API", () => {
     });
     describe('Post /notas', () => {
         it('Should create a note.', done => {
-            var nota = { "titulo": "chaipost", "contenido": "contenido de la nota", "fecha": "22/08/2019" };
-            var dbMock = sinon.mock(server.db);
-            dbMock.expects('insert').withArgs(nota);
+            var nota = { "titulo": "chaipost", "contenido": "contenido de la nota", "fecha": "08/22/2019" };
+            var dbMock = sinon.mock(Nota);
+            dbMock.expects('create').withArgs(nota).yields(null);
             chai
                 .request(server.app)
                 .post("/api/v1/notas")
@@ -75,10 +68,24 @@ describe("Notas API", () => {
                 .end((err, res) => {
                     expect(res).to.have.status(200);
                     dbMock.verify();
+                    done();
+                });
+        });
+    });
 
-
-                    
-                    // proyectMock.verify();
+    describe('Post /notas', () => {
+        it('should return 500 if fails', done => {
+            var nota = { "titulo": "chaipost", "contenido": "contenido de la nota", "fecha": "08/22/2019" };
+            var dbMock = sinon.mock(Nota);
+            dbMock.expects('create').withArgs(nota).yields(true);
+            chai
+                .request(server.app)
+                .post("/api/v1/notas")
+                .send(nota)
+                // .query({ apikey: "test" })
+                .end((err, res) => {
+                    expect(res).to.have.status(500);
+                    dbMock.verify();
                     done();
                 });
         });
