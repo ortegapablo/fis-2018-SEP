@@ -4,11 +4,30 @@ var datastore = require("nedb");
 var cors = require('cors');
 var path = require('path');
 var Nota = require('./notas');
+var ApiKey = require('./apikeys');
+
+var passport = require('passport');
+var LocalAPIKey = require('passport-localapikey-update').Strategy;
 
 const NOTAS_APP_DIR = "/dist/notas-gui";
 
 
 var urlBase = "/api/v1";
+passport.use(new LocalAPIKey(
+    (apikey, done) => {
+        ApiKey.findOne({ apikey: apikey }, (err, user) => {
+            if (err) { return done(err); }
+            if (!user) {
+                return done(null, false, { message: 'Apikey desconocida' + apikey });
+            } else {
+                console.log("Logged as: " + user.user);
+                return done(null, user);
+            }
+        })
+    }
+));
+
+
 var filename = __dirname + "/notas.json";
 var notas = [{ "titulo": "Nota de prueba", "contenido": "recordar completar la colección de todos los metodos de la api en postman" }];
 var db = new datastore({
@@ -21,6 +40,7 @@ var db = new datastore({
 
 var app = express();
 app.use(bodyParser.json());
+app.use(passport.initialize());
 app.use(cors());
 app.use(express.static(path.join(__dirname, NOTAS_APP_DIR)));
 app.get('/', function (req, res) {
@@ -29,31 +49,35 @@ app.get('/', function (req, res) {
 
 
 
-app.get(urlBase + "/notas", (req, res) => {
-    Nota.find((err, notas) => {
-        if (err) {
-            console.error("Error accediendo a la base de datos");
-            res.sendStatus(500);
-        } else {
-            res.send(notas.map((nota) => {
-                return nota.cleanup();
-            }));
-        }
-    })
-});
-
-
-app.post(urlBase + "/notas", (req, res) => {
-    var nota = req.body;
-    Nota.create(nota, (err) => {
-        if (err) {
-            console.error(err);
-            res.sendStatus(500);
-        } else {
-            res.status(200).send('Nota guardada');
-        }
+app.get(urlBase + "/notas",
+    passport.authenticate('localapikey', { session: false }),
+    (req, res) => {
+        Nota.find((err, notas) => {
+            if (err) {
+                console.error("Error accediendo a la base de datos");
+                res.sendStatus(500);
+            } else {
+                res.send(notas.map((nota) => {
+                    return nota.cleanup();
+                }));
+            }
+        })
     });
-});
+
+
+app.post(urlBase + "/notas",
+    passport.authenticate('localapikey', { session: false }),
+    (req, res) => {
+        var nota = req.body;
+        Nota.create(nota, (err) => {
+            if (err) {
+                console.error(err);
+                res.sendStatus(500);
+            } else {
+                res.status(200).send('Nota guardada');
+            }
+        });
+    });
 
 app.put(urlBase + "/notas", (req, res) => {
     res.status(405).send("¡no puedes actualizar todo a la vez!");

@@ -3,11 +3,16 @@ var chai = require('chai');
 var chaiHttp = require('chai-http');
 var sinon = require('sinon');
 var Nota = require('../notas');
+var ApiKey = require('../apikeys');
 var expect = chai.expect;
 
 chai.use(chaiHttp);
 
 describe("Notas API", () => {
+    before(() => {
+        var ApiKeyStub = sinon.stub(ApiKey, 'findOne');
+        ApiKeyStub.yields(null, new ApiKey({user:'test'}));
+    });
     it('hola mundo', (done) => {
         var x = 3;
         var y = 5;
@@ -23,6 +28,7 @@ describe("Notas API", () => {
             chai
                 .request(server.app)
                 .get("/")
+                .query({ apikey: "test" })
                 .end((err, res) => {
                     expect(res).to.have.status(200);
                     expect(res).to.be.html;
@@ -41,7 +47,7 @@ describe("Notas API", () => {
             chai
                 .request(server.app)
                 .get("/api/v1/notas")
-                // .query({ apikey: "test" })
+                .query({ apikey: "test" })
                 .end((err, res) => {
                     expect(res).to.have.status(200);
                     expect(res.body).to.be.an("array");
@@ -64,7 +70,7 @@ describe("Notas API", () => {
                 .request(server.app)
                 .post("/api/v1/notas")
                 .send(nota)
-                // .query({ apikey: "test" })
+                .query({ apikey: "test" })
                 .end((err, res) => {
                     expect(res).to.have.status(200);
                     dbMock.verify();
@@ -82,7 +88,7 @@ describe("Notas API", () => {
                 .request(server.app)
                 .post("/api/v1/notas")
                 .send(nota)
-                // .query({ apikey: "test" })
+                .query({ apikey: "test" })
                 .end((err, res) => {
                     expect(res).to.have.status(500);
                     dbMock.verify();
