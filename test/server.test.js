@@ -80,6 +80,24 @@ describe("Notas API", () => {
     });
 
     describe('Post /notas', () => {
+        it('Should return not authorize 401.', done => {
+            var nota = { "titulo": "chaipost", "contenido": "contenido de la nota", "fecha": "08/22/2019" };
+            // var dbMock = sinon.mock(Nota);
+            // dbMock.expects('create').withArgs(nota).yields(null);
+            chai
+                .request(server.app)
+                .post("/api/v1/notas")
+                .send(nota)
+              //  .query({ apikey: "test" })
+                .end((err, res) => {
+                    expect(res).to.have.status(401);
+              //      dbMock.verify();
+                    done();
+                });
+        });
+    });
+
+    describe('Post /notas', () => {
         it('should return 500 if fails', done => {
             var nota = { "titulo": "chaipost", "contenido": "contenido de la nota", "fecha": "08/22/2019" };
             var dbMock = sinon.mock(Nota);
