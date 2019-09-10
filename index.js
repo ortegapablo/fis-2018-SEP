@@ -22,7 +22,7 @@ db.once('open', function() {
                 }
             });
         } else{
-            console.log('user: ' + apikeys + ", " + apikeys);
+          //  console.log('user: ' + apikeys + ", " + apikeys);
         }
     }));
 });

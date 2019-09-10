@@ -19,16 +19,19 @@ export class NotasComponent implements OnInit {
   constructor(private notaService: NotaService) { }
 
   addNota(): void {
-    this.notas.push(this.nuevaNota);
-    this.nuevaNota = {
-      titulo: null,
-      contenido: null,
-      fecha: null
-    };
+    this.notaService.addNota(this.nuevaNota)
+      .subscribe(() => {
+        this.notas.push(this.nuevaNota);
+        this.nuevaNota = {
+          titulo: null,
+          contenido: null,
+          fecha: null
+        };
+      });
   }
 
   getNotas() {
-  this.notaService.getNotas()
+    this.notaService.getNotas()
       .subscribe((notas) => {
         this.notas = notas;
       });

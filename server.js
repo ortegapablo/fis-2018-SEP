@@ -133,7 +133,7 @@ app.delete(urlBase + "/notas/:titulo", passport.authenticate('localapikey', { se
                 } else if (eliminada.n == 0) {
                     res.status(404).send("No se ha encontrado la nota");
                 } else {
-                    res.status(201).send("Nota eliminada correctamente");
+                    res.sendStatus(200);
                 }
             }
         });

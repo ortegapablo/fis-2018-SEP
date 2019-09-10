@@ -9,12 +9,13 @@
             <th>Contenido</th>
             <th>Fecha</th>
             <th>&nbsp;</th>
+            <th>&nbsp;</th>
         </tr>
     </thead>
 <tr>
     <td><input class="form-control" [(ngModel)]="nuevaNota.titulo"></td>
     <td><input class="form-control" [(ngModel)]="nuevaNota.contenido"></td>
-    <td><input class="form-control" [(ngModel)]="nuevaNota.fecha"></td>
+    <td><input type="date" class="form-control" [(ngModel)]="nuevaNota.fecha"></td>
     <td><button  class="btn btn-primary" (click)="addNota()">Añadir Nota</button></td>
 </tr>
     <tr *ngFor="let nota of notas" app-edita-nota [nota]="nota">
